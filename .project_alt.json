@@ -1,0 +1,4 @@
+{
+  "src/*.rs": {"alternate": "test/test_{}.rs"},
+  "test/test_*.rs": {"alternate": "src/{}.rs"}
+}
