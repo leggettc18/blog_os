@@ -15,6 +15,7 @@ use core::panic::PanicInfo;
 pub fn init() {
   gdt::init();
   interrupts::init_idt();
+  unsafe { interrupts::PICS.lock().initialize() };
 }
 
 pub fn test_runner(tests: &[&dyn Fn()]) {
