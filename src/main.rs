@@ -7,7 +7,7 @@
 #![reexport_test_harness_main =  "test_main"]
 
 use core::panic::PanicInfo;
-use bootloader:{BootInfo, entry_point};
+use bootloader::{BootInfo, entry_point};
 use blog_os::println;
 
 entry_point!(kernel_main);
