@@ -13,37 +13,37 @@ use blog_os::println;
 entry_point!(kernel_main);
 
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-  // this function is the entry point, since the linker looks for a function
-  // named '_start' by default
+  use blog_os::memory::active_level_4_table;
+  use x86_64::VirtAddr;
+
   println!("Hello World{}", "!");
 
   // init function from lib.rs
   blog_os::init();
 
-  // invoke a breakpoint exception
-  x86_64::instructions::interrupts::int3();
+  let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+  let l4_table = unsafe { active_level_4_table(phys_mem_offset) };
 
-  // trigger a page fault
-  // unsafe {
-  //   *(0xdeadbeef as *mut u64) = 42;
-  // };
+  for (i, entry) in l4_table.iter().enumerate() {
+    use x86_64::structures::paging::PageTable;
 
-  // recurses endlessly to cause a stack overflow
-  // fn stack_overflow() {
-  //   stack_overflow();
-  // }
+    if !entry.is_unused() {
+      println!("L4 Entry {}: {:?}", i, entry);
 
-  // trigger a stack overflow
-  // stack_overflow();
+      // get the physical address from the entry and convert it
+      let phys = entry.frame().unwrap().start_address();
+      let virt = phys.as_u64() + boot_info.physical_memory_offset;
+      let ptr = VirtAddr::new(virt).as_mut_ptr();
+      let l3_table: &PageTable = unsafe { &*ptr };
 
-  // trigger a page fault
-  // let ptr = 0xdeadbeaf as *mut u32;
-  // unsafe { *ptr = 42; }
-
-  use x86_64::registers::control::Cr3;
-
-  let (level_4_page_table, _) = Cr3::read();
-  println!("Level 4 page table at: {:?}", level_4_page_table.start_address());
+      //print non-empty entries of the level 3 table
+      for (i, entry) in l3_table.iter().enumerate() {
+        if !entry.is_unused() {
+          println!("  L3 Entry {}: {:?}", i, entry);
+        }
+      }
+    }
+  }
 
   #[cfg(test)]
   test_main();
