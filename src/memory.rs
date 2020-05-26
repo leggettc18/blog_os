@@ -38,6 +38,11 @@ unsafe fn active_level_4_table(physical_memory_offset: VirtAddr)
     &mut *page_table_ptr // unsafe
 }
 
+pub struct BootInfoFrameAllocator {
+    memory_map: &'static MemoryMap,
+    next: usize,
+}
+
 impl BootInfoFrameAllocator {
     /// Create a FrameAllocator from the passed memory map.
     /// 
